@@ -1,15 +1,17 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { Plus, Trash2, Edit2 } from '@lucide/vue'
+import { Plus, Trash2, Edit2, CalendarDays, ListChecks } from '@lucide/vue'
 import { useTaskStore } from '@/stores/taskStore'
 import { useChecklistStore } from '@/stores/checklistStore'
 import MonthSelector from '@/components/MonthSelector.vue'
 import MonthlyCompletionChart from '@/components/charts/MonthlyCompletionChart.vue'
 import MonthlyPieChart from '@/components/charts/MonthlyPieChart.vue'
+import DailyTaskView from '@/components/DailyTaskView.vue'
 import type { Task } from '@/types'
 
 const taskStore = useTaskStore()
 const checklistStore = useChecklistStore()
+const activeView = ref<'monthly' | 'daily'>('monthly')
 
 // Auto-focus directive
 const vFocus = { mounted: (el: HTMLElement) => (el as HTMLInputElement).focus() }
@@ -157,10 +159,21 @@ function isWeekend(dayNum: number): boolean {
   <div class="min-h-screen bg-slate-50 flex flex-col" style="font-family:'Inter',system-ui,sans-serif">
 
     <!-- ═══ HEADER (Minimal - Month Selector Only) ═══ -->
-    <header class="bg-white border-b border-slate-200 px-6 py-3 flex items-center justify-center shrink-0">
-      <MonthSelector v-model="selectedMonthYear" />
+    <header class="bg-white border-b border-slate-200 px-6 py-3 flex items-center justify-between shrink-0">
+      <nav class="flex items-center gap-1" aria-label="Chế độ xem">
+        <button @click="activeView = 'monthly'" class="flex items-center gap-2 px-3 py-2 text-xs font-bold transition-colors" :class="activeView === 'monthly' ? 'bg-violet-100 text-violet-700' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-800'">
+          <CalendarDays class="w-4 h-4" /> Theo tháng
+        </button>
+        <button @click="activeView = 'daily'" class="flex items-center gap-2 px-3 py-2 text-xs font-bold transition-colors" :class="activeView === 'daily' ? 'bg-violet-100 text-violet-700' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-800'">
+          <ListChecks class="w-4 h-4" /> Hôm nay
+        </button>
+      </nav>
+      <MonthSelector v-if="activeView === 'monthly'" v-model="selectedMonthYear" />
+      <div v-else class="w-[166px]"></div>
     </header>
 
+    <DailyTaskView v-if="activeView === 'daily'" />
+    <template v-else>
     <!-- ═══ CHART SECTION ═══ -->
     <section class="bg-white border-b border-slate-200 px-6 py-5 shrink-0">
       <div class="grid grid-cols-1 md:grid-cols-5 gap-6 items-center">
@@ -412,7 +425,7 @@ function isWeekend(dayNum: number): boolean {
 
       </table>
     </section>
-
+    </template>
   </div>
 </template>
 
