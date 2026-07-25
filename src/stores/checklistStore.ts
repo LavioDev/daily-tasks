@@ -5,19 +5,24 @@ import type { ChecklistEntry } from '@/types'
 export const useChecklistStore = defineStore('checklist', () => {
   const entries = ref<ChecklistEntry[]>([])
 
-  // Load from localStorage
-  const savedEntries = localStorage.getItem('dailytasks_checklist')
-  if (savedEntries) {
-    try {
+  // Load from localStorage safely
+  try {
+    const savedEntries = localStorage.getItem('dailytasks_checklist')
+    if (savedEntries) {
       entries.value = JSON.parse(savedEntries)
-    } catch (e) {
-      console.error('Failed to parse checklist entries from localStorage', e)
     }
+  } catch (e) {
+    console.error('Failed to load checklist entries from localStorage', e)
   }
 
-  // Watch for changes and save to localStorage
+  // Watch for changes and save to localStorage safely
   watch(entries, (newEntries) => {
-    localStorage.setItem('dailytasks_checklist', JSON.stringify(newEntries))
+    try {
+      localStorage.setItem('dailytasks_checklist', JSON.stringify(newEntries))
+    } catch (e) {
+      console.error('Failed to save checklist entries to localStorage', e)
+      handleQuotaError(e)
+    }
   }, { deep: true })
 
   // Actions
@@ -54,3 +59,12 @@ export const useChecklistStore = defineStore('checklist', () => {
     deleteEntriesForTask
   }
 })
+
+function handleQuotaError(e: any) {
+  if (e instanceof DOMException && (
+    e.name === 'QuotaExceededError' ||
+    e.name === 'NS_ERROR_DOM_QUOTA_REACHED'
+  )) {
+    alert('Bộ nhớ trình duyệt (localStorage) đã đầy. Tiến trình của bạn có thể không được lưu.')
+  }
+}

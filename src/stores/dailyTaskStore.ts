@@ -10,19 +10,42 @@ export const useDailyTaskStore = defineStore('dailyTasks', () => {
   const tasks = ref<Task[]>(load(STORAGE_TASKS, []))
   const entries = ref<ChecklistEntry[]>(load(STORAGE_ENTRIES, []))
 
-  watch(tasks, value => localStorage.setItem(STORAGE_TASKS, JSON.stringify(value)), { deep: true })
-  watch(entries, value => localStorage.setItem(STORAGE_ENTRIES, JSON.stringify(value)), { deep: true })
+  watch(tasks, value => {
+    try {
+      localStorage.setItem(STORAGE_TASKS, JSON.stringify(value))
+    } catch (e) {
+      console.error('Failed to save daily tasks to localStorage', e)
+      handleQuotaError(e)
+    }
+  }, { deep: true })
 
-  function addTask(title: string) {
+  watch(entries, value => {
+    try {
+      localStorage.setItem(STORAGE_ENTRIES, JSON.stringify(value))
+    } catch (e) {
+      console.error('Failed to save daily entries to localStorage', e)
+      handleQuotaError(e)
+    }
+  }, { deep: true })
+
+  function addTask(title: string, dateStr?: string) {
+    const now = new Date()
+    const taskDate = dateStr || `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+    const timePart = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}.${String(now.getMilliseconds()).padStart(3, '0')}`
     tasks.value.push({
       id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2, 11),
-      title: title.trim(), color: THEME_PURPLE, createdAt: new Date().toISOString()
+      title: title.trim(), color: THEME_PURPLE, createdAt: `${taskDate}T${timePart}`,
+      duration: null, timeSpent: 0
     })
   }
 
-  function updateTaskTitle(id: string, title: string) {
+  function updateTask(id: string, updates: { title?: string; duration?: number | null; timeSpent?: number }) {
     const task = tasks.value.find(item => item.id === id)
-    if (task) task.title = title.trim()
+    if (task) {
+      if (updates.title !== undefined) task.title = updates.title.trim()
+      if (updates.duration !== undefined) task.duration = updates.duration
+      if (updates.timeSpent !== undefined) task.timeSpent = updates.timeSpent
+    }
   }
 
   function deleteTask(id: string) {
@@ -43,14 +66,25 @@ export const useDailyTaskStore = defineStore('dailyTasks', () => {
     })
   }
 
-  return { tasks, entries, addTask, updateTaskTitle, deleteTask, toggleEntry }
+  return { tasks, entries, addTask, updateTask, deleteTask, toggleEntry }
 })
 
 function load<T>(key: string, fallback: T): T {
-  const saved = localStorage.getItem(key)
-  if (!saved) return fallback
-  try { return JSON.parse(saved) as T } catch (error) {
-    console.error(`Failed to parse ${key}`, error)
+  try {
+    const saved = localStorage.getItem(key)
+    if (!saved) return fallback
+    return JSON.parse(saved) as T
+  } catch (error) {
+    console.error(`Failed to load ${key} from localStorage`, error)
     return fallback
+  }
+}
+
+function handleQuotaError(e: any) {
+  if (e instanceof DOMException && (
+    e.name === 'QuotaExceededError' ||
+    e.name === 'NS_ERROR_DOM_QUOTA_REACHED'
+  )) {
+    alert('Bộ nhớ trình duyệt (localStorage) đã đầy. Tiến trình của bạn có thể không được lưu.')
   }
 }

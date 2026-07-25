@@ -3,6 +3,8 @@ export interface Task {
   title: string
   color: string
   createdAt: string
+  duration?: number | null
+  timeSpent?: number
 }
 
 export interface ChecklistEntry {

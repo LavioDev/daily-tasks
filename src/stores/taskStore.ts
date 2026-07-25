@@ -7,21 +7,25 @@ const THEME_PURPLE = '#7c3aed' // Unified brand purple (violet-600)
 export const useTaskStore = defineStore('tasks', () => {
   const tasks = ref<Task[]>([])
 
-  // Load from localStorage
-  const savedTasks = localStorage.getItem('dailytasks_tasks')
-  if (savedTasks) {
-    try {
+  // Load from localStorage safely
+  try {
+    const savedTasks = localStorage.getItem('dailytasks_tasks')
+    if (savedTasks) {
       const parsed = JSON.parse(savedTasks) as Task[]
-      // Automatically migrate all task colors to the unified purple theme
       tasks.value = parsed.map(t => ({ ...t, color: THEME_PURPLE }))
-    } catch (e) {
-      console.error('Failed to parse tasks from localStorage', e)
     }
+  } catch (e) {
+    console.error('Failed to load tasks from localStorage', e)
   }
 
-  // Watch for changes and save to localStorage
+  // Watch for changes and save to localStorage safely
   watch(tasks, (newTasks) => {
-    localStorage.setItem('dailytasks_tasks', JSON.stringify(newTasks))
+    try {
+      localStorage.setItem('dailytasks_tasks', JSON.stringify(newTasks))
+    } catch (e) {
+      console.error('Failed to save tasks to localStorage', e)
+      handleQuotaError(e)
+    }
   }, { deep: true })
 
   // Actions
@@ -62,3 +66,12 @@ export const useTaskStore = defineStore('tasks', () => {
     deleteTask
   }
 })
+
+function handleQuotaError(e: any) {
+  if (e instanceof DOMException && (
+    e.name === 'QuotaExceededError' ||
+    e.name === 'NS_ERROR_DOM_QUOTA_REACHED'
+  )) {
+    alert('Bộ nhớ trình duyệt (localStorage) đã đầy. Tiến trình của bạn có thể không được lưu.')
+  }
+}
