@@ -60,7 +60,7 @@ function handleToggle(taskId: string, dayNum: number) {
 // Task CRUD
 function handleAddTask() {
   if (!newTaskTitle.value.trim()) return
-  taskStore.addTask(newTaskTitle.value.trim())
+  taskStore.addTask(newTaskTitle.value.trim(), 'monthly')
   newTaskTitle.value = ''
 }
 
@@ -148,7 +148,7 @@ function isWeekend(dayNum: number): boolean {
       <!-- ── TASK ROWS ── -->
       <tbody>
         <tr
-          v-for="task in taskStore.tasks" :key="task.id"
+          v-for="task in taskStore.monthlyTasks" :key="task.id"
           class="border-b border-slate-200 group hover:bg-violet-50/20 transition-colors"
         >
           <!-- Task Name (sticky left) -->
@@ -267,7 +267,7 @@ function isWeekend(dayNum: number): boolean {
         </tr>
 
         <!-- ── EMPTY STATE (no tasks) ── -->
-        <tr v-if="taskStore.tasks.length === 0">
+        <tr v-if="taskStore.monthlyTasks.length === 0">
           <td :colspan="daysInMonth + 2"
             class="text-center py-16 text-sm text-slate-400 font-medium bg-white"
           >
@@ -280,7 +280,7 @@ function isWeekend(dayNum: number): boolean {
       </tbody>
 
       <!-- ── FOOTER: Daily totals row ── -->
-      <tfoot v-if="taskStore.tasks.length > 0">
+      <tfoot v-if="taskStore.monthlyTasks.length > 0">
         <tr class="border-t-2 border-slate-300 bg-slate-50">
           <td class="sticky left-0 z-20 bg-slate-100 border-r-2 border-slate-300 px-4 py-2 min-w-[220px] w-[220px]">
             <span class="text-[10px] font-black uppercase tracking-widest text-slate-500">Tổng trong ngày</span>
@@ -301,16 +301,16 @@ function isWeekend(dayNum: number): boolean {
             <span class="text-[10px] font-black"
               :class="(() => {
                 const date = getDayStr(d)
-                const checked = checklistStore.entries.filter(e => e.date === date && e.progress === 100).length
-                const total = taskStore.tasks.length
+                const checked = taskStore.monthlyTasks.filter(t => isChecked(t.id, d)).length
+                const total = taskStore.monthlyTasks.length
                 if (checked === 0) return 'text-slate-300'
                 if (checked === total) return 'text-violet-700 font-extrabold'
                 return 'text-violet-500 font-bold'
               })()"
             >
               {{
-                checklistStore.entries.filter(e => e.date === getDayStr(d) && e.progress === 100).length
-              }}/{{ taskStore.tasks.length }}
+                taskStore.monthlyTasks.filter(t => isChecked(t.id, d)).length
+              }}/{{ taskStore.monthlyTasks.length }}
             </span>
           </td>
           <td class="sticky right-0 z-20 bg-slate-100 border-l-2 border-slate-300 min-w-[56px] w-[56px]"></td>

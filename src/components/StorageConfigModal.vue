@@ -103,16 +103,17 @@ function handleClearAll() {
 </script>
 
 <template>
-  <div
-    v-if="isOpen"
-    class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm px-4 animate-in fade-in duration-150"
-    @click.self="emit('close')"
-  >
+  <Transition name="antd-modal">
     <div
-      class="bg-white border border-slate-200 w-full max-w-lg shadow-2xl animate-in zoom-in-95 duration-150 overflow-hidden flex flex-col max-h-[90vh]"
+      v-if="isOpen"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-[2px] px-4"
+      @click.self="emit('close')"
     >
-      <!-- Modal Header -->
-      <div class="border-b border-slate-200 px-6 py-4 flex items-center justify-between bg-slate-50">
+      <div
+        class="antd-modal-content bg-white border border-slate-200 w-full max-w-lg shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+      >
+        <!-- Modal Header -->
+        <div class="border-b border-slate-200 px-6 py-4 flex items-center justify-between bg-slate-50">
         <div class="flex items-center gap-2">
           <Settings class="w-4 h-4 text-violet-600" />
           <h2 class="text-xs font-black uppercase tracking-widest text-slate-800">
@@ -188,14 +189,22 @@ function handleClearAll() {
               v-for="item in stats.breakdown"
               :key="item.key"
               class="px-4 py-2.5 flex items-center justify-between text-xs hover:bg-slate-50/80 transition-colors"
+              :class="item.key === 'other' ? 'bg-slate-50/60' : ''"
             >
               <div class="flex flex-col">
                 <span class="font-bold text-slate-700">{{ item.label }}</span>
-                <span class="text-[10px] text-slate-400 font-mono">{{ item.key }}</span>
+                <span v-if="item.key === 'projects'" class="text-[10px] text-slate-400 font-mono">dailytasks_projects</span>
+                <span v-else-if="item.key === 'phases'" class="text-[10px] text-slate-400 font-mono">dailytasks_phases</span>
+                <span v-else-if="item.key === 'tasks_monthly'" class="text-[10px] text-slate-400 font-mono">type: monthly (thói quen định kỳ)</span>
+                <span v-else-if="item.key === 'tasks_daily'" class="text-[10px] text-slate-400 font-mono">type: daily (công việc trong ngày)</span>
+                <span v-else-if="item.key === 'tasks_project'" class="text-[10px] text-slate-400 font-mono">type: project (công việc theo dự án)</span>
+                <span v-else-if="item.key === 'subtasks'" class="text-[10px] text-slate-400 font-mono">dailytasks_subtasks</span>
+                <span v-else-if="item.key === 'checklist'" class="text-[10px] text-slate-400 font-mono">dailytasks_checklist</span>
+                <span v-else class="text-[10px] text-slate-400">Dữ liệu web/tiện ích ngoài dự án</span>
               </div>
               <div class="text-right">
                 <span class="font-mono font-bold text-slate-800">{{ (item.bytes / 1024).toFixed(2) }} KB</span>
-                <span class="block text-[10px] text-slate-400">({{ item.count }} mục)</span>
+                <span class="block text-[10px] text-slate-400">{{ item.key === 'other' ? `(${item.count} khóa)` : `(${item.count} mục)` }}</span>
               </div>
             </div>
           </div>
@@ -277,4 +286,5 @@ function handleClearAll() {
       </div>
     </div>
   </div>
+  </Transition>
 </template>

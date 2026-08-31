@@ -40,3 +40,32 @@
 .cell-check-anim {
   animation: cell-check 0.15s ease-out;
 }
+
+/* ═══ Ant Design (AntD) Modal Zoom & Fade Animation ═══ */
+.antd-modal-enter-active,
+.antd-modal-leave-active {
+  transition: opacity 0.22s cubic-bezier(0.645, 0.045, 0.355, 1);
+}
+
+.antd-modal-enter-active .antd-modal-content {
+  transition: transform 0.28s cubic-bezier(0.08, 0.82, 0.17, 1), opacity 0.28s cubic-bezier(0.08, 0.82, 0.17, 1);
+}
+
+.antd-modal-leave-active .antd-modal-content {
+  transition: transform 0.2s cubic-bezier(0.6, 0.04, 0.98, 0.34), opacity 0.2s cubic-bezier(0.6, 0.04, 0.98, 0.34);
+}
+
+.antd-modal-enter-from,
+.antd-modal-leave-to {
+  opacity: 0;
+}
+
+.antd-modal-enter-from .antd-modal-content {
+  opacity: 0;
+  transform: scale(0.7) translateY(-12px);
+}
+
+.antd-modal-leave-to .antd-modal-content {
+  opacity: 0;
+  transform: scale(0.8);
+}

@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { ref, computed, onUnmounted, watch } from 'vue'
 import { Play, Pause, RotateCcw, Check, ChevronLeft } from '@lucide/vue'
-import { useDailyTaskStore } from '@/stores/dailyTaskStore'
+import { useTaskStore } from '@/stores/taskStore'
+import { useChecklistStore } from '@/stores/checklistStore'
 
 const props = defineProps<{
   taskId: string
@@ -11,8 +12,9 @@ const emit = defineEmits<{
   (e: 'back'): void
 }>()
 
-const dailyTaskStore = useDailyTaskStore()
-const task = computed(() => dailyTaskStore.tasks.find(t => t.id === props.taskId))
+const taskStore = useTaskStore()
+const checklistStore = useChecklistStore()
+const task = computed(() => taskStore.tasks.find(t => t.id === props.taskId))
 
 if (!task.value) {
   emit('back')
@@ -125,7 +127,7 @@ function saveTimeSpent(customSeconds?: number) {
     }
   }
   
-  dailyTaskStore.updateTask(currentTask.id, {
+  taskStore.updateTask(currentTask.id, {
     timeSpent: calculatedTimeSpent
   })
 }
@@ -139,11 +141,9 @@ function handleComplete() {
     
     // Toggle checklist entry to checked (progress = 100)
     const taskDate = currentTask.createdAt.split('T')[0] || ''
-    const alreadyCompleted = dailyTaskStore.entries.some(
-      e => e.taskId === currentTask.id && e.date === taskDate && e.progress === 100
-    )
+    const alreadyCompleted = checklistStore.isTaskCompleted(currentTask.id, taskDate)
     if (!alreadyCompleted) {
-      dailyTaskStore.toggleEntry(currentTask.id, taskDate)
+      checklistStore.toggleEntry(currentTask.id, taskDate)
     }
   }
   emit('back')

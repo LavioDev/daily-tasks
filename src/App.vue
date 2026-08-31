@@ -1,16 +1,14 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
-import { CalendarDays, ListChecks, Settings } from '@lucide/vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useRoute, RouterLink, RouterView } from 'vue-router'
+import { CalendarDays, ListChecks, FolderKanban, Settings } from '@lucide/vue'
 import MonthSelector from '@/components/MonthSelector.vue'
-import DailyTaskView from '@/components/DailyTaskView.vue'
-import MonthlyChartsView from '@/components/MonthlyChartsView.vue'
-import MonthlyHabitGrid from '@/components/MonthlyHabitGrid.vue'
-import TimerView from '@/components/TimerView.vue'
 import StorageConfigModal from '@/components/StorageConfigModal.vue'
+import { useMonthStore } from '@/stores/monthStore'
 import { getLocalStorageStats } from '@/utils/storage'
 
-const activeView = ref<'monthly' | 'daily' | 'timer'>('monthly')
-const activeTimerTaskId = ref<string | null>(null)
+const route = useRoute()
+const monthStore = useMonthStore()
 
 // Config & Storage Modal State
 const isConfigOpen = ref(false)
@@ -29,45 +27,49 @@ onUnmounted(() => {
   window.removeEventListener('storage', refreshStorage)
 })
 
-// Selected month/year
-const selectedMonthYear = ref({
-  year: new Date().getFullYear(),
-  month: new Date().getMonth()
-})
-
-// Selected day for the daily pie chart (defaults to today)
-const selectedDayNum = ref<number>(new Date().getDate())
-
-// Computed days array [1..N]
-const daysInMonth = computed(() =>
-  new Date(selectedMonthYear.value.year, selectedMonthYear.value.month + 1, 0).getDate()
-)
-
-// Watch daysInMonth to ensure selectedDayNum is within valid range
-watch(daysInMonth, (newVal) => {
-  if (selectedDayNum.value > newVal) {
-    selectedDayNum.value = newVal
-  }
-})
+// Active view route helpers
+const isTimerView = computed(() => route.path.startsWith('/timer'))
+const isMonthlyView = computed(() => route.path.startsWith('/monthly') || route.path === '/')
+const isDailyView = computed(() => route.path.startsWith('/daily'))
+const isProjectsView = computed(() => route.path.startsWith('/projects'))
 </script>
 
 <template>
   <div class="min-h-screen bg-slate-50 flex flex-col" style="font-family:'Inter',system-ui,sans-serif">
 
     <!-- ═══ HEADER (Nav + Month Selector + Config Storage Button) ═══ -->
-    <header v-if="activeView !== 'timer'" class="bg-white border-b border-slate-200 px-6 py-3 flex items-center justify-between shrink-0 animate-in fade-in duration-150">
+    <header
+      v-if="!isTimerView"
+      class="bg-white border-b border-slate-200 px-6 py-3 flex items-center justify-between shrink-0 animate-in fade-in duration-150"
+    >
       <nav class="flex items-center gap-1" aria-label="Chế độ xem">
-        <button @click="activeView = 'monthly'" class="flex items-center gap-2 px-3 py-2 text-xs font-bold transition-colors" :class="activeView === 'monthly' ? 'bg-violet-100 text-violet-700' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-800'">
+        <RouterLink
+          to="/monthly"
+          class="flex items-center gap-2 px-3 py-2 text-xs font-bold transition-colors"
+          :class="isMonthlyView ? 'bg-violet-100 text-violet-700' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-800'"
+        >
           <CalendarDays class="w-4 h-4" /> Theo tháng
-        </button>
-        <button @click="activeView = 'daily'" class="flex items-center gap-2 px-3 py-2 text-xs font-bold transition-colors" :class="activeView === 'daily' ? 'bg-violet-100 text-violet-700' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-800'">
+        </RouterLink>
+        <RouterLink
+          to="/daily"
+          class="flex items-center gap-2 px-3 py-2 text-xs font-bold transition-colors"
+          :class="isDailyView ? 'bg-violet-100 text-violet-700' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-800'"
+        >
           <ListChecks class="w-4 h-4" /> Hôm nay
-        </button>
+        </RouterLink>
+        <RouterLink
+          to="/projects"
+          class="flex items-center gap-2 px-3 py-2 text-xs font-bold transition-colors"
+          :class="isProjectsView ? 'bg-violet-100 text-violet-700' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-800'"
+        >
+          <FolderKanban class="w-4 h-4" /> Dự án
+        </RouterLink>
       </nav>
 
       <!-- Right Header Actions -->
       <div class="flex items-center gap-2.5">
-        <MonthSelector v-if="activeView === 'monthly'" v-model="selectedMonthYear" />
+        <!-- Month Selector is only shown on the Monthly page -->
+        <MonthSelector v-if="isMonthlyView" v-model="monthStore.selectedMonthYear" />
         
         <!-- Config & Storage Capacity Button -->
         <button
@@ -90,27 +92,7 @@ watch(daysInMonth, (newVal) => {
       @data-changed="refreshStorage"
     />
 
-    <TimerView 
-      v-if="activeView === 'timer' && activeTimerTaskId" 
-      :task-id="activeTimerTaskId" 
-      @back="activeView = 'daily'" 
-    />
-    <DailyTaskView 
-      v-else-if="activeView === 'daily'" 
-      @start-timer="(id) => { activeTimerTaskId = id; activeView = 'timer' }" 
-    />
-    <template v-else>
-      <!-- ═══ CHART SECTION ═══ -->
-      <MonthlyChartsView
-        :selected-month-year="selectedMonthYear"
-        :selected-day-num="selectedDayNum"
-      />
-
-      <!-- ═══ HABIT GRID ═══ -->
-      <MonthlyHabitGrid
-        :selected-month-year="selectedMonthYear"
-        v-model:selected-day-num="selectedDayNum"
-      />
-    </template>
+    <!-- Routed Page Content -->
+    <RouterView />
   </div>
 </template>

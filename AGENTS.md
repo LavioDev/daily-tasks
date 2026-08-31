@@ -49,17 +49,28 @@ daily-tasks/
 │   │   ├── MonthSelector.vue       # Month and year selector dropdowns
 │   │   ├── StorageConfigModal.vue  # Storage gauge, backup export/import & reset modal
 │   │   └── TimerView.vue           # Focus countdown and stopwatch screen
+│   ├── router/                     # Vue Router configuration
+│   │   └── index.ts                # Routes: /monthly, /daily, /projects, /projects/:projectId, /timer/:taskId
 │   ├── stores/                     # Pinia stores
-│   │   ├── checklistStore.ts       # Monthly habit daily check-in entries
-│   │   ├── dailyTaskStore.ts       # Daily tasks, durations, and timer state
-│   │   └── taskStore.ts            # Monthly habit definitions
+│   │   ├── checklistStore.ts       # Unified daily check-in entries & subtask auto-completion
+│   │   ├── dailyTaskStore.ts       # Daily tasks proxy store
+│   │   ├── monthStore.ts           # Shared month and day selection state
+│   │   ├── projectStore.ts         # Projects & Phases state management
+│   │   ├── subtaskStore.ts         # Subtasks CRUD & reordering
+│   │   └── taskStore.ts            # Unified task definitions (monthly, daily, project)
 │   ├── types/                      # TypeScript type definitions
-│   │   └── index.ts                # Task and ChecklistEntry models
+│   │   └── index.ts                # Project, Phase, Task, Subtask, and ChecklistEntry models
 │   ├── utils/                      # Utility functions
 │   │   └── storage.ts              # LocalStorage statistics, quota calculation, backup/import
-│   ├── App.vue                     # Root coordinator component
+│   ├── views/                      # Routed page views
+│   │   ├── DailyView.vue           # /daily route page
+│   │   ├── MonthlyView.vue         # /monthly route page
+│   │   ├── ProjectDetailView.vue   # /projects/:projectId route page (Phases -> Tasks -> Subtasks)
+│   │   ├── ProjectsView.vue        # /projects route page
+│   │   └── TimerPage.vue           # /timer/:taskId route page
+│   ├── App.vue                     # Root coordinator component with RouterView
 │   ├── env.d.ts                    # Vite client types
-│   └── main.ts                     # App entry point (Vue + Pinia initialization)
+│   └── main.ts                     # App entry point (Vue, Pinia, Router)
 ├── index.html                      # Root HTML template
 ├── package.json                    # Dependencies and scripts
 ├── postcss.config.js               # PostCSS configuration
@@ -75,40 +86,85 @@ daily-tasks/
 ## 3. Data Architecture & State Management
 
 ### Data Models (`src/types/index.ts`)
-1. **`Task`**:
+1. **`Project`**:
    - `id`: Unique identifier (`crypto.randomUUID()` with fallback)
-   - `title`: Task / habit title
+   - `title`: Project title
+   - `description?`: Project overview/goals
+   - `color`: Brand accent color
+   - `status`: `'active' | 'completed' | 'archived'`
+   - `startDate?`: `YYYY-MM-DD`
+   - `targetDate?`: `YYYY-MM-DD`
+   - `order`: Sorting order
+   - `createdAt`: ISO Date String
+
+2. **`Phase`**:
+   - `id`: Unique identifier
+   - `projectId`: Foreign key to associated Project
+   - `title`: Phase title
+   - `description?`: Phase details
+   - `startDate?`: `YYYY-MM-DD`
+   - `endDate?`: `YYYY-MM-DD`
+   - `order`: Phase sequence order
+   - `createdAt`: ISO Date String
+
+3. **`Task`**:
+   - `id`: Unique identifier
+   - `title`: Task title
    - `color`: Brand color (default purple `#7c3aed`)
-   - `createdAt`: ISO Date String (e.g., `YYYY-MM-DDTHH:mm:ss.sss`)
+   - `createdAt`: ISO Date String
+   - `type?`: Task classification flag (`'monthly'` | `'daily'` | `'project'`)
+   - `projectId?`: Foreign key to Project
+   - `phaseId?`: Foreign key to Phase
    - `duration?`: Target duration in minutes (optional)
    - `timeSpent?`: Total accumulated focus time in seconds (optional)
+   - `dueDate?`: Target due date `YYYY-MM-DD`
 
-2. **`ChecklistEntry`**:
+4. **`Subtask`**:
    - `id`: Unique identifier
-   - `taskId`: Associated task identifier
+   - `taskId`: Foreign key to parent Task
+   - `title`: Subtask title
+   - `order`: Sequence order
+   - `duration?`: Target duration in minutes
+   - `timeSpent?`: Accumulated focus time
+   - `createdAt`: ISO Date String
+
+5. **`ChecklistEntry`**:
+   - `id`: Unique identifier
+   - `taskId`: Associated parent task identifier
+   - `subtaskId?`: Associated subtask identifier (when check-in applies to subtask)
    - `date`: Date string formatted as `YYYY-MM-DD`
    - `progress`: `0` or `100` (completion state)
    - `completedAt?`: ISO Date String when completed
 
 ### LocalStorage Keys
-- `dailytasks_tasks`: Monthly habit list (managed by `taskStore`)
-- `dailytasks_checklist`: Monthly habit completion history (managed by `checklistStore`)
-- `dailytasks_daily_tasks`: Daily task entries (managed by `dailyTaskStore`)
-- `dailytasks_daily_entries`: Daily task completion history (managed by `dailyTaskStore`)
+- `dailytasks_projects`: Projects collection (managed by `projectStore`)
+- `dailytasks_phases`: Project Phases collection (managed by `projectStore`)
+- `dailytasks_tasks`: Unified task repository for monthly habits, daily tasks, and project tasks (managed by `taskStore`)
+- `dailytasks_subtasks`: Subtasks collection (managed by `subtaskStore`)
+- `dailytasks_checklist`: Unified completion history across all tasks & subtasks with auto-completion logic (managed by `checklistStore`)
 
 ---
 
-## 4. View Modes in `App.vue`
+## 4. Application Routes & Pages (Vue Router)
 
-1. **`activeView === 'monthly'` (Monthly Habit Tracker):**
-   - Header: View mode switcher + `MonthSelector` (month 1-12 & year selection).
+1. **`/monthly` (Monthly Habit Tracker - `MonthlyView.vue`):**
+   - Header: Navigation switcher + `MonthSelector` (month 1-12 & year dropdowns) + Storage capacity gauge button.
    - Body: `MonthlyChartsView` (Line chart + 2 Doughnut charts) and `MonthlyHabitGrid` (2D habit matrix with sticky columns/header/footer).
-2. **`activeView === 'daily'` (Daily Tasks):**
-   - Header: View mode switcher.
+   - Root `/` redirects to `/monthly`.
+2. **`/daily` (Daily Tasks - `DailyView.vue`):**
+   - Header: Navigation switcher + Storage capacity gauge button.
    - Body: `DailyTaskView` (Day navigation, progress bar, add task, edit modal, delete, and timer launcher).
-3. **`activeView === 'timer'` (Focus Timer):**
+3. **`/projects` (Projects Management - `ProjectsView.vue`):**
+   - Header: Navigation switcher + Storage capacity gauge button.
+   - Body: Projects overview dashboard, quick stats cards, project grid with progress bars and deadline badges, create/edit project modal.
+4. **`/projects/:projectId` (Project Detail & Phases - `ProjectDetailView.vue`):**
+   - Header: Navigation switcher + Storage capacity gauge button.
+   - Body: Project hero card, date navigator, Phase accordions with nested Tasks & Subtasks.
+   - Auto-completion: Checking all subtasks of a task on a date automatically completes the parent task (`progress: 100`).
+5. **`/timer/:taskId` (Focus Timer - `TimerPage.vue`):**
+   - Header: Hidden for immersive focus.
    - Focused dark-mode interface (`bg-slate-900`).
-   - SVG circular progress indicator supporting countdown (when `duration` is specified) or stopwatch.
+   - SVG circular progress indicator supporting countdown or stopwatch.
    - Controls: Reset, Play/Pause, and Mark Complete (automatically updates `timeSpent` and checklist status).
 
 ---

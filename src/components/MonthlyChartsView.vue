@@ -27,49 +27,66 @@ function getDayStr(dayNum: number): string {
   return `${y}-${m}-${d}`
 }
 
+// Helper to get total tasks and checked count for a specific date
+function getStatsForDate(dateStr: string) {
+  const habits = taskStore.monthlyTasks
+  const dailyTasksOnDate = taskStore.dailyTasks.filter(
+    (t) => t.createdAt && t.createdAt.startsWith(dateStr)
+  )
+  const projectTasksOnDate = taskStore.projectTasks.filter(
+    (t) => (t.dueDate && t.dueDate === dateStr) || (t.createdAt && t.createdAt.startsWith(dateStr))
+  )
+  const applicableTaskIds = new Set([
+    ...habits.map((t) => t.id),
+    ...dailyTasksOnDate.map((t) => t.id),
+    ...projectTasksOnDate.map((t) => t.id)
+  ])
+  const total = applicableTaskIds.size
+
+  const checked = checklistStore.entries.filter(
+    (e) => e.date === dateStr && e.progress === 100 && applicableTaskIds.has(e.taskId) && !e.subtaskId
+  ).length
+
+  return { total, checked }
+}
+
 // Computations for statistics & charts
 const dailyRates = computed(() => {
-  const totalTasks = taskStore.tasks.length
   const rates = []
-  
   for (let d = 1; d <= daysInMonth.value; d++) {
     const dateStr = getDayStr(d)
-    const checkedCount = checklistStore.entries.filter(
-      (e) => e.date === dateStr && e.progress === 100
-    ).length
-    
+    const { total, checked } = getStatsForDate(dateStr)
     rates.push({
       dayNum: d,
-      rate: totalTasks > 0 ? Math.round((checkedCount / totalTasks) * 100) : 0
+      rate: total > 0 ? Math.round((checked / total) * 100) : 0
     })
   }
   return rates
 })
 
 const monthStats = computed(() => {
-  const total = taskStore.tasks.length
-  const maxPossible = total * daysInMonth.value
-  let ticks = 0
+  let totalTasksCount = 0
+  let totalCheckedCount = 0
+
   for (const d of days.value) {
-    const date = getDayStr(d)
-    ticks += checklistStore.entries.filter(e => e.date === date && e.progress === 100).length
+    const dateStr = getDayStr(d)
+    const { total, checked } = getStatsForDate(dateStr)
+    totalTasksCount += total
+    totalCheckedCount += checked
   }
+
   return {
-    total,
-    ticks,
-    percent: maxPossible > 0 ? Math.round((ticks / maxPossible) * 100) : 0
+    total: totalTasksCount,
+    ticks: totalCheckedCount,
+    percent: totalTasksCount > 0 ? Math.round((totalCheckedCount / totalTasksCount) * 100) : 0
   }
 })
 
 // Calculate percentage of tasks completed on the selected day
 const selectedDayPercent = computed(() => {
-  const total = taskStore.tasks.length
-  if (total === 0) return 0
-  const date = getDayStr(props.selectedDayNum)
-  const checkedCount = checklistStore.entries.filter(
-    (e) => e.date === date && e.progress === 100
-  ).length
-  return Math.round((checkedCount / total) * 100)
+  const dateStr = getDayStr(props.selectedDayNum)
+  const { total, checked } = getStatsForDate(dateStr)
+  return total > 0 ? Math.round((checked / total) * 100) : 0
 })
 </script>
 

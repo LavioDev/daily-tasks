@@ -153,50 +153,52 @@ function formatDuration(seconds: number): string {
       </section>
     </div>
 
-    <!-- Edit Modal -->
-    <div v-if="isEditModalOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm px-4">
-      <div class="bg-white border border-slate-200 w-full max-w-md shadow-xl animate-in fade-in zoom-in-95 duration-150">
-        <div class="border-b border-slate-200 px-6 py-4">
-          <h3 class="text-sm font-black uppercase tracking-widest text-slate-700">Chỉnh sửa công việc</h3>
+    <!-- Edit Modal with AntD zoom animation -->
+    <Transition name="antd-modal">
+      <div v-if="isEditModalOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-[2px] px-4" @click.self="isEditModalOpen = false">
+        <div class="antd-modal-content bg-white border border-slate-200 w-full max-w-md shadow-xl">
+          <div class="border-b border-slate-200 px-6 py-4">
+            <h3 class="text-sm font-black uppercase tracking-widest text-slate-700">Chỉnh sửa công việc</h3>
+          </div>
+          <form @submit.prevent="saveEdit" class="p-6 flex flex-col gap-4">
+            <div class="flex flex-col gap-1.5">
+              <label class="text-[10px] font-black uppercase tracking-widest text-slate-400">Tên công việc</label>
+              <input 
+                v-model="editTitle" 
+                type="text" 
+                required
+                class="w-full h-10 border border-slate-200 px-3 text-sm font-semibold text-slate-700 outline-none focus:border-violet-500"
+                placeholder="Nhập tên công việc..."
+              />
+            </div>
+            <div class="flex flex-col gap-1.5">
+              <label class="text-[10px] font-black uppercase tracking-widest text-slate-400">Thời gian thực hiện (phút)</label>
+              <input 
+                v-model.number="editDuration" 
+                type="number" 
+                min="1"
+                class="w-full h-10 border border-slate-200 px-3 text-sm font-semibold text-slate-700 outline-none focus:border-violet-500"
+                placeholder="Không giới hạn thời gian (để trống)"
+              />
+            </div>
+            <div class="flex justify-end gap-3 mt-2">
+              <button 
+                type="button" 
+                @click="isEditModalOpen = false" 
+                class="h-10 px-4 text-xs font-bold text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition-colors"
+              >
+                Hủy
+              </button>
+              <button 
+                type="submit" 
+                class="h-10 px-4 bg-violet-600 hover:bg-violet-700 text-white text-xs font-bold transition-colors"
+              >
+                Lưu thay đổi
+              </button>
+            </div>
+          </form>
         </div>
-        <form @submit.prevent="saveEdit" class="p-6 flex flex-col gap-4">
-          <div class="flex flex-col gap-1.5">
-            <label class="text-[10px] font-black uppercase tracking-widest text-slate-400">Tên công việc</label>
-            <input 
-              v-model="editTitle" 
-              type="text" 
-              required
-              class="w-full h-10 border border-slate-200 px-3 text-sm font-semibold text-slate-700 outline-none focus:border-violet-500"
-              placeholder="Nhập tên công việc..."
-            />
-          </div>
-          <div class="flex flex-col gap-1.5">
-            <label class="text-[10px] font-black uppercase tracking-widest text-slate-400">Thời gian thực hiện (phút)</label>
-            <input 
-              v-model.number="editDuration" 
-              type="number" 
-              min="1"
-              class="w-full h-10 border border-slate-200 px-3 text-sm font-semibold text-slate-700 outline-none focus:border-violet-500"
-              placeholder="Không giới hạn thời gian (để trống)"
-            />
-          </div>
-          <div class="flex justify-end gap-3 mt-2">
-            <button 
-              type="button" 
-              @click="isEditModalOpen = false" 
-              class="h-10 px-4 text-xs font-bold text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition-colors"
-            >
-              Hủy
-            </button>
-            <button 
-              type="submit" 
-              class="h-10 px-4 bg-violet-600 hover:bg-violet-700 text-white text-xs font-bold transition-colors"
-            >
-              Lưu thay đổi
-            </button>
-          </div>
-        </form>
       </div>
-    </div>
+    </Transition>
   </main>
 </template>

@@ -9,11 +9,12 @@ This document details the system architecture, component hierarchy, data flow, a
 ```mermaid
 graph TD
     App[App.vue - View Coordinator & Header]
+    Router[Vue Router - src/router/index.ts]
     
-    subgraph Views [View Modes]
-        MonthlyView[Monthly Tracker / activeView = 'monthly']
-        DailyView[Daily Checklist / activeView = 'daily']
-        TimerView[Focus Timer / activeView = 'timer']
+    subgraph Routes [Application Routes]
+        MonthlyRoute[/monthly -> MonthlyView.vue]
+        DailyRoute[/daily -> DailyView.vue]
+        TimerRoute[/timer/:taskId -> TimerPage.vue]
     end
 
     subgraph MonthlyComponents [Monthly View Components]
@@ -33,6 +34,7 @@ graph TD
         TaskStore[taskStore.ts - Monthly Habits]
         ChecklistStore[checklistStore.ts - Habit Check-ins]
         DailyTaskStore[dailyTaskStore.ts - Daily Tasks & Timer State]
+        MonthStore[monthStore.ts - Month & Day Selection]
     end
 
     subgraph Storage [LocalStorage Persistence]
@@ -42,19 +44,19 @@ graph TD
         LS_DailyEntries[(dailytasks_daily_entries)]
     end
 
-    App --> MonthSelector
-    App --> MonthlyView
-    App --> DailyView
-    App --> TimerView
+    App --> Router
+    Router --> MonthlyRoute
+    Router --> DailyRoute
+    Router --> TimerRoute
 
-    MonthlyView --> MonthlyCharts
-    MonthlyView --> HabitGrid
+    MonthlyRoute --> MonthlyCharts
+    MonthlyRoute --> HabitGrid
     MonthlyCharts --> CompletionChart
     MonthlyCharts --> PieChart
 
-    DailyView --> DailyList
+    DailyRoute --> DailyList
     DailyList --> TaskModal
-    DailyList -.->|emit 'start-timer'| TimerView
+    DailyList -.->|navigate /timer/:id| TimerRoute
 
     HabitGrid <--> TaskStore
     HabitGrid <--> ChecklistStore
@@ -100,33 +102,50 @@ graph TD
    - Edit modal for updating title and target duration in minutes.
    - Timer launch button to switch to `TimerView`.
 
-### 2.4. Focus Timer Group
+### 2.4. Projects & Phases Management Group
+1. **`ProjectsView.vue`:**
+   - Projects dashboard overview with status cards and statistics.
+   - Project cards displaying completion rate (based on task checks), deadline date, phase count, and task count.
+   - Create/edit project modal with curated color palette and date pickers.
+2. **`ProjectDetailView.vue`:**
+   - Project detail hero card and date picker for daily check-ins.
+   - Phase sections (ordered sequence) with Phase progress bar and phase management actions.
+   - Nested Task & Subtask items:
+     - Task row with checkbox, duration, timer trigger, and subtask expander.
+     - Subtask list with individual daily check-in boxes.
+     - **Auto-completion**: Checking all subtasks of a task on a date automatically marks the parent task as complete (`progress: 100`). Unchecking any subtask sets the parent task back to incomplete.
+
+### 2.5. Focus Timer Group
 1. **`TimerView.vue`:**
    - Dedicated dark interface (`bg-slate-900`).
    - Circular SVG progress ring:
      - **Countdown Mode** (when `duration` is set): Progress ring smoothly decreases based on remaining time.
      - **Stopwatch Mode** (when no `duration` is set): Continuous pulse ring indicator.
-   - Automatically synchronizes `timeSpent` to `dailyTaskStore` every second.
-   - Complete button (Check icon) finalizes elapsed time and marks the daily task as completed.
+   - Automatically synchronizes `timeSpent` to `taskStore` every second.
+   - Complete button (Check icon) finalizes elapsed time and marks the task as completed.
 
 ---
 
 ## 3. State Management & Storage Architecture
 
-### 3.1. `useTaskStore` (`src/stores/taskStore.ts`)
+### 3.1. `useProjectStore` (`src/stores/projectStore.ts`)
+- **State:** `projects: Ref<Project[]>`, `phases: Ref<Phase[]>`
+- **Purpose:** Manages projects and their chronological phases with cascade deletion.
+- **LocalStorage:** Synced to `dailytasks_projects` and `dailytasks_phases`.
+
+### 3.2. `useTaskStore` (`src/stores/taskStore.ts`)
 - **State:** `tasks: Ref<Task[]>`
-- **Purpose:** Manages the list of monthly recurring habits.
-- **Actions:** `addTask(title)`, `updateTaskTitle(id, title)`, `updateTaskColor(id, color)`, `deleteTask(id)`.
+- **Purpose:** Unified repository for all task types (`type: 'monthly' | 'daily' | 'project'`).
+- **Getters:** `monthlyTasks`, `dailyTasks`, `projectTasks`, `getTasksByProject(id)`, `getTasksByPhase(id)`.
 - **LocalStorage:** Synced to `dailytasks_tasks`.
 
-### 3.2. `useChecklistStore` (`src/stores/checklistStore.ts`)
-- **State:** `entries: Ref<ChecklistEntry[]>`
-- **Purpose:** Stores completion check-ins for monthly habits indexed by `taskId` and `date`.
-- **Actions:** `toggleEntry(taskId, date)`, `deleteEntriesForTask(taskId)`.
-- **LocalStorage:** Synced to `dailytasks_checklist`.
+### 3.3. `useSubtaskStore` (`src/stores/subtaskStore.ts`)
+- **State:** `subtasks: Ref<Subtask[]>`
+- **Purpose:** Manages fine-grained subtasks belonging to parent tasks.
+- **LocalStorage:** Synced to `dailytasks_subtasks`.
 
-### 3.3. `useDailyTaskStore` (`src/stores/dailyTaskStore.ts`)
-- **State:** `tasks: Ref<Task[]>`, `entries: Ref<ChecklistEntry[]>`
-- **Purpose:** Manages date-specific daily tasks, target durations, and spent focus time.
-- **Actions:** `addTask(title, dateStr?)`, `updateTask(id, updates)`, `deleteTask(id)`, `toggleEntry(taskId, date)`.
-- **LocalStorage:** Synced to `dailytasks_daily_tasks` and `dailytasks_daily_entries`.
+### 3.4. `useChecklistStore` (`src/stores/checklistStore.ts`)
+- **State:** `entries: Ref<ChecklistEntry[]>`
+- **Purpose:** Stores daily check-in progress (0 or 100) for tasks and subtasks.
+- **Auto-completion logic:** Automatically synchronizes parent task status when all subtasks are checked.
+- **LocalStorage:** Synced to `dailytasks_checklist`.
