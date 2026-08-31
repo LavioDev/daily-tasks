@@ -99,23 +99,16 @@ const activeProjects = computed(() => projectStore.projects.filter(p => p.status
 const completedProjects = computed(() => projectStore.projects.filter(p => p.status === 'completed').length)
 const totalProjectTasks = computed(() => taskStore.projectTasks.length)
 
-// Today's Tasks Stats across all task types
+// Today's Tasks Stats for Project Tasks ONLY
 const todayStats = computed(() => {
   const dateStr = todayStr.value
-  const habits = taskStore.monthlyTasks
-  const dailyTasksOnDate = taskStore.dailyTasks.filter(
-    (t) => t.createdAt && t.createdAt.startsWith(dateStr)
-  )
+  
+  // Only tasks belonging to projects (dueDate today OR created today)
   const projectTasksOnDate = taskStore.projectTasks.filter(
     (t) => (t.dueDate && t.dueDate === dateStr) || (t.createdAt && t.createdAt.startsWith(dateStr))
   )
 
-  const applicableTaskIds = new Set([
-    ...habits.map((t) => t.id),
-    ...dailyTasksOnDate.map((t) => t.id),
-    ...projectTasksOnDate.map((t) => t.id)
-  ])
-
+  const applicableTaskIds = new Set(projectTasksOnDate.map((t) => t.id))
   const total = applicableTaskIds.size
 
   const completed = checklistStore.entries.filter(
