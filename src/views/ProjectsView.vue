@@ -246,52 +246,54 @@ function navigateToProject(projectId: string) {
         </button>
       </div>
 
-      <!-- Quick Summary Stats Grid: 3 cards per row (Consistent colors) -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        
-        <!-- 1. Tổng dự án -->
-        <div class="bg-white p-4 border border-slate-200 flex flex-col justify-between h-[116px] shadow-sm">
-          <span class="text-[10px] font-black uppercase tracking-widest text-slate-400 block">Tổng dự án</span>
-          <div class="flex items-baseline gap-1.5 my-auto">
-            <span class="text-2xl font-mono font-extrabold text-slate-800">{{ totalProjects }}</span>
-            <span class="text-xs text-slate-400 font-semibold">dự án</span>
-          </div>
-          <span class="text-xs text-slate-500 truncate">
-            <strong class="text-violet-700">{{ activeProjects }}</strong> đang chạy · <strong class="text-slate-700">{{ completedProjects }}</strong> xong
-          </span>
-        </div>
-
-        <!-- 2. Số task hôm nay -->
-        <div class="bg-white p-4 border border-slate-200 flex flex-col justify-between h-[116px] shadow-sm">
-          <span class="text-[10px] font-black uppercase tracking-widest text-slate-400 block">Số task hôm nay</span>
-          <div class="flex items-baseline gap-1.5 my-auto">
-            <span class="text-2xl font-mono font-extrabold text-slate-800">{{ todayStats.total }}</span>
-            <span class="text-xs text-slate-400 font-semibold">công việc</span>
-          </div>
-          <span class="text-xs text-slate-500 truncate">
-            <strong class="text-violet-700">{{ todayStats.completed }}</strong> đã làm · <strong class="text-slate-500">{{ todayStats.notDone }}</strong> chưa làm
-          </span>
-        </div>
-
-        <!-- 3. Biểu đồ piechart số lượng task hôm nay -->
-        <div class="bg-white p-4 border border-slate-200 flex items-center justify-between h-[116px] shadow-sm">
-          <div class="flex flex-col justify-between h-full py-0.5 min-w-0 pr-3">
-            <span class="text-[10px] font-black uppercase tracking-widest text-slate-400 block truncate">Tỷ lệ hôm nay</span>
-            <div class="my-auto">
-              <span class="text-2xl font-mono font-extrabold text-slate-800 leading-none">{{ todayStats.percent }}%</span>
+      <!-- ═══ SUMMARY STATS WIDGETS CONTAINER ═══ -->
+      <div class="bg-white border border-slate-200 px-6 py-5 mb-6 shadow-sm">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+          
+          <!-- 1. Tổng dự án -->
+          <div class="flex flex-col justify-between h-[100px]">
+            <span class="text-[10px] font-black uppercase tracking-widest text-slate-400 block">Tổng dự án</span>
+            <div class="flex items-baseline gap-1.5 my-auto">
+              <span class="text-2xl font-mono font-extrabold text-slate-800">{{ totalProjects }}</span>
+              <span class="text-xs text-slate-400 font-semibold">dự án</span>
             </div>
-            <span class="block text-xs text-slate-500 truncate">
-              <strong class="text-violet-700">{{ todayStats.completed }}</strong>/{{ todayStats.total }} hoàn thành
+            <span class="text-xs text-slate-500 truncate">
+              <strong class="text-violet-700">{{ activeProjects }}</strong> đang chạy · <strong class="text-slate-700">{{ completedProjects }}</strong> xong
             </span>
           </div>
-          <div class="relative w-20 h-20 shrink-0">
-            <Doughnut :data="pieChartData" :options="pieChartOptions" />
-            <div class="absolute inset-0 flex items-center justify-center pointer-events-none select-none">
-              <span class="text-xs font-mono font-black text-slate-800">{{ todayStats.percent }}%</span>
+
+          <!-- 2. Số task hôm nay -->
+          <div class="flex flex-col justify-between h-[100px] border-t pt-5 md:border-t-0 md:pt-0 md:border-l border-slate-200 md:pl-6">
+            <span class="text-[10px] font-black uppercase tracking-widest text-slate-400 block">Số task hôm nay</span>
+            <div class="flex items-baseline gap-1.5 my-auto">
+              <span class="text-2xl font-mono font-extrabold text-slate-800">{{ todayStats.total }}</span>
+              <span class="text-xs text-slate-400 font-semibold">công việc</span>
+            </div>
+            <span class="text-xs text-slate-500 truncate">
+              <strong class="text-violet-700">{{ todayStats.completed }}</strong> đã làm · <strong class="text-slate-500">{{ todayStats.notDone }}</strong> chưa làm
+            </span>
+          </div>
+
+          <!-- 3. Biểu đồ piechart số lượng task hôm nay -->
+          <div class="flex items-center justify-between h-[100px] border-t pt-5 md:border-t-0 md:pt-0 md:border-l border-slate-200 md:pl-6">
+            <div class="flex flex-col justify-between h-full py-0.5 min-w-0 pr-3">
+              <span class="text-[10px] font-black uppercase tracking-widest text-slate-400 block truncate">Tỷ lệ hôm nay</span>
+              <div class="my-auto">
+                <span class="text-2xl font-mono font-extrabold text-slate-800 leading-none">{{ todayStats.percent }}%</span>
+              </div>
+              <span class="block text-xs text-slate-500 truncate">
+                <strong class="text-violet-700">{{ todayStats.completed }}</strong>/{{ todayStats.total }} hoàn thành
+              </span>
+            </div>
+            <div class="relative w-20 h-20 shrink-0">
+              <Doughnut :data="pieChartData" :options="pieChartOptions" />
+              <div class="absolute inset-0 flex items-center justify-center pointer-events-none select-none">
+                <span class="text-xs font-mono font-black text-slate-800">{{ todayStats.percent }}%</span>
+              </div>
             </div>
           </div>
-        </div>
 
+        </div>
       </div>
 
       <!-- Project Cards Grid: 3 cards per row -->
