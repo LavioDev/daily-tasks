@@ -225,6 +225,7 @@ const activeAddingSubtaskId = ref<string | null>(null)
 const newSubtaskTitle = ref('')
 
 function startAddSubtask(taskId: string) {
+  cancelEditSubtask()
   activeAddingSubtaskId.value = taskId
   newSubtaskTitle.value = ''
 }
@@ -244,6 +245,30 @@ function cancelAddSubtask() {
 function deleteSubtask(subtaskId: string) {
   subtaskStore.deleteSubtask(subtaskId)
   checklistStore.deleteEntriesForSubtask(subtaskId)
+}
+
+// ═══ SUBTASK EDIT STATE ═══
+const editingSubtaskId = ref<string | null>(null)
+const editingSubtaskTitle = ref('')
+
+function startEditSubtask(subtask: Subtask) {
+  cancelAddSubtask()
+  editingSubtaskId.value = subtask.id
+  editingSubtaskTitle.value = subtask.title
+}
+
+function saveEditSubtask(subtaskId: string) {
+  if (!editingSubtaskTitle.value.trim()) return
+  subtaskStore.updateSubtask(subtaskId, {
+    title: editingSubtaskTitle.value.trim()
+  })
+  editingSubtaskId.value = null
+  editingSubtaskTitle.value = ''
+}
+
+function cancelEditSubtask() {
+  editingSubtaskId.value = null
+  editingSubtaskTitle.value = ''
 }
 
 // ═══ CHECK & AUTO-COMPLETE ═══
@@ -504,9 +529,8 @@ function launchTimer(taskId: string) {
 
                   <!-- Task Title -->
                   <span
-                    class="text-sm font-bold truncate cursor-default select-none tracking-tight"
+                    class="text-sm font-bold truncate select-text cursor-text tracking-tight"
                     :class="checklistStore.isTaskCompleted(task.id, selectedDate) ? 'text-slate-400 line-through font-medium' : 'text-slate-800'"
-                    @dblclick="openEditTaskModal(task)"
                   >
                     {{ task.title }}
                   </span>
@@ -564,33 +588,78 @@ function launchTimer(taskId: string) {
                 <div
                   v-for="subtask in subtaskStore.getSubtasksByTaskId(task.id)"
                   :key="subtask.id"
-                  class="py-1.5 flex items-center justify-between gap-2.5 group/sub"
                 >
-                  <div class="flex items-center gap-2.5 min-w-0 flex-1">
-                    <button
-                      @click="handleSubtaskToggle(task, subtask)"
-                      class="flex h-3.5 w-3.5 shrink-0 items-center justify-center border transition-all"
-                      :class="checklistStore.isSubtaskCompleted(subtask.id, selectedDate)
-                        ? 'border-violet-600 bg-violet-600 text-white'
-                        : 'border-slate-300 bg-white hover:border-violet-400'"
-                      title="Check subtask"
-                    >
-                      <Check v-if="checklistStore.isSubtaskCompleted(subtask.id, selectedDate)" class="h-2.5 w-2.5 stroke-[2.5]" />
-                    </button>
-                    <span
-                      class="text-xs font-medium truncate select-none"
-                      :class="checklistStore.isSubtaskCompleted(subtask.id, selectedDate) ? 'text-slate-400 line-through' : 'text-slate-700'"
-                    >
-                      {{ subtask.title }}
-                    </span>
-                  </div>
-                  <button
-                    @click="deleteSubtask(subtask.id)"
-                    class="p-1 text-slate-300 hover:text-red-500 opacity-0 group-hover/sub:opacity-100 transition-opacity"
-                    title="Xóa subtask"
+                  <!-- Inline Edit Subtask Form -->
+                  <form
+                    v-if="editingSubtaskId === subtask.id"
+                    @submit.prevent="saveEditSubtask(subtask.id)"
+                    class="py-1.5 flex items-center gap-2.5 border-b border-violet-400 w-full"
                   >
-                    <Trash2 class="w-3.5 h-3.5" />
-                  </button>
+                    <span class="w-3.5 h-3.5 border border-dashed border-violet-300 shrink-0"></span>
+                    <input
+                      v-model="editingSubtaskTitle"
+                      type="text"
+                      placeholder="Sửa nhiệm vụ con..."
+                      class="text-xs text-slate-700 placeholder:text-slate-400 outline-none bg-transparent flex-1 font-medium py-0.5 select-text"
+                      autofocus
+                      @keydown.esc="cancelEditSubtask"
+                    />
+                    <button
+                      type="submit"
+                      :disabled="!editingSubtaskTitle.trim()"
+                      class="text-xs font-bold text-violet-600 hover:text-violet-800 disabled:opacity-30"
+                    >
+                      Lưu
+                    </button>
+                    <button
+                      type="button"
+                      @click="cancelEditSubtask"
+                      class="text-xs text-slate-400 hover:text-slate-600"
+                    >
+                      Hủy
+                    </button>
+                  </form>
+
+                  <!-- Normal Subtask Row -->
+                  <div
+                    v-else
+                    class="py-1.5 flex items-center justify-between gap-2.5 group/sub"
+                  >
+                    <div class="flex items-center gap-2.5 min-w-0 flex-1">
+                      <button
+                        @click="handleSubtaskToggle(task, subtask)"
+                        class="flex h-3.5 w-3.5 shrink-0 items-center justify-center border transition-all"
+                        :class="checklistStore.isSubtaskCompleted(subtask.id, selectedDate)
+                          ? 'border-violet-600 bg-violet-600 text-white'
+                          : 'border-slate-300 bg-white hover:border-violet-400'"
+                        title="Check subtask"
+                      >
+                        <Check v-if="checklistStore.isSubtaskCompleted(subtask.id, selectedDate)" class="h-2.5 w-2.5 stroke-[2.5]" />
+                      </button>
+                      <span
+                        class="text-xs font-medium truncate select-text cursor-text"
+                        :class="checklistStore.isSubtaskCompleted(subtask.id, selectedDate) ? 'text-slate-400 line-through' : 'text-slate-700'"
+                      >
+                        {{ subtask.title }}
+                      </span>
+                    </div>
+                    <div class="flex items-center gap-1 opacity-0 group-hover/sub:opacity-100 transition-opacity shrink-0">
+                      <button
+                        @click="startEditSubtask(subtask)"
+                        class="p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-200 transition-colors"
+                        title="Đổi tên / Sửa subtask"
+                      >
+                        <Edit2 class="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        @click="deleteSubtask(subtask.id)"
+                        class="p-1 text-slate-300 hover:text-red-500 hover:bg-red-50 transition-colors"
+                        title="Xóa subtask"
+                      >
+                        <Trash2 class="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
                 </div>
 
                 <!-- Inline Subtask Input Form with bottom border only -->

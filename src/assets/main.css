@@ -6,6 +6,10 @@
   * {
     box-sizing: border-box;
   }
+  ::selection {
+    background-color: #ddd6fe;
+    color: #4c1d95;
+  }
   body {
     @apply bg-slate-50 text-slate-900 antialiased min-h-screen;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
