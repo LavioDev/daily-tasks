@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, RouterLink, RouterView } from 'vue-router'
-import { CalendarDays, ListChecks, FolderKanban, Settings } from '@lucide/vue'
+import { CalendarDays, FolderKanban, Settings, Waypoints } from '@lucide/vue'
 import MonthSelector from '@/components/MonthSelector.vue'
 import StorageConfigModal from '@/components/StorageConfigModal.vue'
 import { useMonthStore } from '@/stores/monthStore'
@@ -32,6 +32,7 @@ const isTimerView = computed(() => route.path.startsWith('/timer'))
 const isMonthlyView = computed(() => route.path.startsWith('/monthly') || route.path === '/')
 const isDailyView = computed(() => route.path.startsWith('/daily'))
 const isProjectsView = computed(() => route.path.startsWith('/projects'))
+const isPlansView = computed(() => route.path.startsWith('/plans'))
 </script>
 
 <template>
@@ -55,7 +56,7 @@ const isProjectsView = computed(() => route.path.startsWith('/projects'))
           class="flex items-center gap-2 px-3 py-2 text-xs font-bold transition-colors"
           :class="isDailyView ? 'bg-violet-100 text-violet-700' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-800'"
         >
-          <ListChecks class="w-4 h-4" /> Hôm nay
+          <CalendarDays class="w-4 h-4" /> Lịch
         </RouterLink>
         <RouterLink
           to="/projects"
@@ -63,6 +64,13 @@ const isProjectsView = computed(() => route.path.startsWith('/projects'))
           :class="isProjectsView ? 'bg-violet-100 text-violet-700' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-800'"
         >
           <FolderKanban class="w-4 h-4" /> Dự án
+        </RouterLink>
+        <RouterLink
+          to="/plans"
+          class="flex items-center gap-2 px-3 py-2 text-xs font-bold transition-colors"
+          :class="isPlansView ? 'bg-violet-100 text-violet-700' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-800'"
+        >
+          <Waypoints class="w-4 h-4" /> Kế hoạch
         </RouterLink>
       </nav>
 

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
+import { useTaskStore } from '@/stores/taskStore'
 import TimerView from '@/components/TimerView.vue'
 
 const props = defineProps<{
@@ -7,9 +8,11 @@ const props = defineProps<{
 }>()
 
 const router = useRouter()
+const taskStore = useTaskStore()
 
 function handleBack() {
-  router.push('/daily')
+  const task = taskStore.tasks.find(item => item.id === props.taskId)
+  router.push(task?.schedule ? { path: '/daily', query: { date: task.schedule.date } } : '/daily')
 }
 </script>
 

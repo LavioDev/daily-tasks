@@ -30,6 +30,7 @@ const KNOWN_STORAGE_KEYS = [
   'dailytasks_tasks',
   'dailytasks_subtasks',
   'dailytasks_checklist',
+  'dailytasks_plan_nodes',
   'dailytasks_daily_tasks',
   'dailytasks_daily_entries'
 ]
@@ -212,6 +213,26 @@ export function getLocalStorageStats(): StorageStats {
     label: 'Lịch sử check-in tiến độ',
     bytes: checklistBytes,
     count: checklistCount
+  })
+
+  let planBytes = 0
+  let planCount = 0
+  try {
+    const rawPlans = localStorage.getItem('dailytasks_plan_nodes')
+    if (rawPlans) {
+      planBytes = (rawPlans.length + 'dailytasks_plan_nodes'.length) * 2
+      projectBytes += planBytes
+      const parsed = JSON.parse(rawPlans)
+      if (Array.isArray(parsed)) planCount = parsed.length
+    }
+  } catch (e) {
+    console.error('Error reading dailytasks_plan_nodes', e)
+  }
+  breakdown.push({
+    key: 'plans',
+    label: 'Kế hoạch dài hạn',
+    bytes: planBytes,
+    count: planCount
   })
 
   // 6. Aggregate all other non-project keys into a single "Khác" item

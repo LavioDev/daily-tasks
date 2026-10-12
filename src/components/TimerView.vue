@@ -21,10 +21,14 @@ if (!task.value) {
 }
 
 const isRunning = ref(false)
-const isCountdown = computed(() => !!task.value?.duration)
+const isCountdown = computed(() => !!(task.value?.schedule || task.value?.duration))
 
 // Timer value states
-const targetSeconds = computed(() => (task.value?.duration || 0) * 60)
+const targetSeconds = computed(() => {
+  const schedule = task.value?.schedule
+  const duration = schedule ? schedule.endMinute - schedule.startMinute : task.value?.duration || 0
+  return duration * 60
+})
 const initialTimeSpent = task.value?.timeSpent || 0
 
 // Current state (in seconds)
@@ -140,7 +144,7 @@ function handleComplete() {
     saveTimeSpent()
     
     // Toggle checklist entry to checked (progress = 100)
-    const taskDate = currentTask.createdAt.split('T')[0] || ''
+    const taskDate = currentTask.schedule?.date || currentTask.createdAt.split('T')[0] || ''
     const alreadyCompleted = checklistStore.isTaskCompleted(currentTask.id, taskDate)
     if (!alreadyCompleted) {
       checklistStore.toggleEntry(currentTask.id, taskDate)

@@ -13,6 +13,18 @@ export interface Project {
   createdAt: string        // ISO string
 }
 
+export interface PlanNode {
+  id: string
+  parentId: string | null
+  title: string
+  description?: string
+  startDate?: string
+  targetDate?: string
+  order: number
+  completedAt?: string | null
+  createdAt: string
+}
+
 export interface Phase {
   id: string
   projectId: string
@@ -36,6 +48,11 @@ export interface Task {
   duration?: number | null // Phút mục tiêu
   timeSpent?: number       // Giây đã đếm giờ
   dueDate?: string         // Hạn hoàn thành YYYY-MM-DD
+  schedule?: {
+    date: string           // Ngày diễn ra YYYY-MM-DD
+    startMinute: number    // Phút tính từ đầu ngày
+    endMinute: number      // Phút tính từ đầu ngày, 1440 là 24:00
+  }
 }
 
 export interface Subtask {

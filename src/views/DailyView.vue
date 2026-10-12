@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
-import DailyTaskView from '@/components/DailyTaskView.vue'
+import WeeklyCalendarView from '@/components/WeeklyCalendarView.vue'
 
 const router = useRouter()
 
@@ -10,5 +10,5 @@ function handleStartTimer(taskId: string) {
 </script>
 
 <template>
-  <DailyTaskView @start-timer="handleStartTimer" />
+  <WeeklyCalendarView @start-timer="handleStartTimer" />
 </template>

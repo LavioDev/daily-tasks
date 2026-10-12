@@ -78,6 +78,7 @@ export const useTaskStore = defineStore('tasks', () => {
       phaseId?: string
       dueDate?: string
       color?: string
+      schedule?: Task['schedule']
     }
   ): Task {
     const id = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2, 11)
@@ -100,7 +101,8 @@ export const useTaskStore = defineStore('tasks', () => {
       phaseId: options?.phaseId,
       dueDate: options?.dueDate,
       duration: options?.duration ?? null,
-      timeSpent: options?.timeSpent ?? 0
+      timeSpent: options?.timeSpent ?? 0,
+      schedule: options?.schedule
     }
 
     tasks.value.push(newTask)
@@ -118,6 +120,7 @@ export const useTaskStore = defineStore('tasks', () => {
       if (updates.dueDate !== undefined) task.dueDate = updates.dueDate
       if (updates.duration !== undefined) task.duration = updates.duration
       if (updates.timeSpent !== undefined) task.timeSpent = updates.timeSpent
+      if (updates.schedule !== undefined) task.schedule = updates.schedule
     }
   }
 
