@@ -13,18 +13,6 @@ export interface Project {
   createdAt: string        // ISO string
 }
 
-export interface PlanNode {
-  id: string
-  parentId: string | null
-  title: string
-  description?: string
-  startDate?: string
-  targetDate?: string
-  order: number
-  completedAt?: string | null
-  createdAt: string
-}
-
 export interface Phase {
   id: string
   projectId: string

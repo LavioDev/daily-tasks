@@ -193,7 +193,7 @@ function saveEvent() {
     errorMessage.value = 'Vui lòng nhập tên lịch.'
     return
   }
-  if (!validDate(eventDate.value) || startMinute.value < DAY_START || startMinute.value >= DAY_END || startMinute.value % 15 !== 0 || endMinute.value > DAY_END || endMinute.value <= startMinute.value || (endMinute.value !== DAY_END && endMinute.value % 15 !== 0)) {
+  if (!validDate(eventDate.value) || startMinute.value < DAY_START || startMinute.value >= DAY_END || endMinute.value > DAY_END || endMinute.value <= startMinute.value) {
     errorMessage.value = 'Chọn ngày và khoảng giờ hợp lệ từ 05:00 đến 24:00.'
     return
   }
@@ -318,13 +318,13 @@ function openSlot(date: string, slotIndex: number) { openNewEvent(date, DAY_STAR
               <label class="flex flex-col gap-1.5 text-[10px] font-black uppercase tracking-widest text-slate-400">Bắt đầu
                 <span class="relative">
                   <Clock3 class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-violet-600" />
-                  <input v-model="startTime" type="time" min="05:00" max="23:45" step="900" required @change="onStartChange" class="h-10 w-full border border-slate-200 bg-white pl-10 pr-3 text-sm font-semibold normal-case tracking-normal text-slate-700 accent-violet-600 outline-none transition-colors hover:border-slate-300 focus:border-violet-500 focus:ring-2 focus:ring-violet-100" />
+                  <input v-model="startTime" type="time" min="05:00" max="23:45" step="60" required @change="onStartChange" class="h-10 w-full border border-slate-200 bg-white pl-10 pr-3 text-sm font-semibold normal-case tracking-normal text-slate-700 accent-violet-600 outline-none transition-colors hover:border-slate-300 focus:border-violet-500 focus:ring-2 focus:ring-violet-100" />
                 </span>
               </label>
               <label class="flex flex-col gap-1.5 text-[10px] font-black uppercase tracking-widest text-slate-400">Kết thúc
                 <span class="relative">
                   <Clock3 class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-violet-600" />
-                  <input v-model="endTime" type="time" :min="formatTime(startMinute + 15)" max="23:45" step="900" :disabled="endAtMidnight || startMinute >= DAY_END - 15" :required="!endAtMidnight" class="h-10 w-full border border-slate-200 bg-white pl-10 pr-3 text-sm font-semibold normal-case tracking-normal text-slate-700 accent-violet-600 outline-none transition-colors hover:border-slate-300 focus:border-violet-500 focus:ring-2 focus:ring-violet-100 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400" />
+                  <input v-model="endTime" type="time" :min="formatTime(startMinute + 15)" max="23:59" step="60" :disabled="endAtMidnight || startMinute >= DAY_END - 15" :required="!endAtMidnight" class="h-10 w-full border border-slate-200 bg-white pl-10 pr-3 text-sm font-semibold normal-case tracking-normal text-slate-700 accent-violet-600 outline-none transition-colors hover:border-slate-300 focus:border-violet-500 focus:ring-2 focus:ring-violet-100 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400" />
                 </span>
               </label>
             </div>

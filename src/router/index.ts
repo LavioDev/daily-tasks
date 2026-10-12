@@ -4,7 +4,6 @@ import DailyView from '@/views/DailyView.vue'
 import ProjectsView from '@/views/ProjectsView.vue'
 import ProjectDetailView from '@/views/ProjectDetailView.vue'
 import TimerPage from '@/views/TimerPage.vue'
-import PlansView from '@/views/PlansView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -35,12 +34,11 @@ const router = createRouter({
     },
     {
       path: '/plans',
-      name: 'plans',
-      component: PlansView
+      redirect: '/projects'
     },
     {
-      path: '/plans/:planId',
-      redirect: '/plans'
+      path: '/plans/:pathMatch(.*)*',
+      redirect: '/projects'
     },
     {
       path: '/timer/:taskId',

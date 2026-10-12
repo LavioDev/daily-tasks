@@ -200,7 +200,6 @@ function handleClearAll() {
                 <span v-else-if="item.key === 'tasks_project'" class="text-[10px] text-slate-400 font-mono">type: project (công việc theo dự án)</span>
                 <span v-else-if="item.key === 'subtasks'" class="text-[10px] text-slate-400 font-mono">dailytasks_subtasks</span>
                 <span v-else-if="item.key === 'checklist'" class="text-[10px] text-slate-400 font-mono">dailytasks_checklist</span>
-                <span v-else-if="item.key === 'plans'" class="text-[10px] text-slate-400 font-mono">dailytasks_plan_nodes</span>
                 <span v-else class="text-[10px] text-slate-400">Dữ liệu web/tiện ích ngoài dự án</span>
               </div>
               <div class="text-right">
